@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=""I turn coffee :coffee: into code, use tabs over spaces and never broke production."">
+
+  <title>myCodeHat</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>myCodeHat</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto">
+<a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Secure Fuse Applications with RH SSO</b></h1>
+
+<p class="post-metadata text-muted">
+  16 March 2020 -  
+  <b>12 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#fuse">
+      <span class="tag badge badge-pill text-primary border border-primary">Fuse</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#sso">
+      <span class="tag badge badge-pill text-primary border border-primary">SSO</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#red-hat">
+      <span class="tag badge badge-pill text-primary border border-primary">Red Hat</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#spring-boot">
+      <span class="tag badge badge-pill text-primary border border-primary">Spring Boot</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#camel">
+      <span class="tag badge badge-pill text-primary border border-primary">Camel</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#keycloak">
+      <span class="tag badge badge-pill text-primary border border-primary">Keycloak</span>
+    </a>
+    </p>
+
+<p>In this article, we’ll cover microservice security concepts by using protocols such as OpenID Connect with the support of Red Hat Single Sign-On. Working with a microservice-based architecture, user identity, and access control in a distributed, in-depth form must be carefully designed. Here, the integration of these tools will be detailed, step-by-step, in a realistic view.</p>
+
+<p>We will use Red Hat SSO standalone which will help in securing a fuse-springboot microservice.</p>
+
+<h2 id="1-getting-started-with-standalone-sso">1. Getting started with standalone SSO</h2>
+
+<h3 id="11-install-standalone-sso">1.1 Install Standalone SSO</h3>
+
+<ul>
+  <li>
+    <p>Download <a href="https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&amp;product=core.service.rhsso">RH SSO</a> from Red Hat Customer Portal</p>
+  </li>
+  <li>
+    <p>Unzip</p>
+  </li>
+  <li>
+    <p>Boot the server - go to the bin directory of the unzipped folder</p>
+  </li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ cd bin
+$ ./standalone.sh
+</code></pre></div></div>
+
+<ul>
+  <li>Creating the Admin Account - as soon as the server boots:
+    <ul>
+      <li>open <a href="http://localhost:8080/auth">http://localhost:8080/auth</a>
+</li>
+      <li>enter a username and password to create an initial admin user</li>
+    </ul>
+  </li>
+</ul>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/admin_registration.png" class="figure-img img-fluid rounded" alt="Admin Creation"><figcaption class="figure-caption text-center">Admin Creation</figcaption></figure>
+
+<ul>
+  <li>Logging in to the Admin Console: 
+<a href="http://localhost:8080/auth/admin/">http://localhost:8080/auth/admin/</a>
+</li>
+</ul>
+
+<p>Now SSO is ready to be configured.</p>
+
+<hr>
+
+<h3 id="12-configure-sso">1.2 Configure SSO</h3>
+
+<p>We are going to create a new realm and a few clients for our microservice to be able to connect to SSO.</p>
+
+<ul>
+  <li>
+    <p>Login to the Admin Console with admin/admin : 
+<a href="http://localhost:8080/auth/admin/">http://localhost:8080/auth/admin/</a></p>
+  </li>
+  <li>
+    <p>Add a new Realm. Hoover over the Master Realm and click <code class="language-plaintext highlighter-rouge">Add realm</code>. Lets call it <code class="language-plaintext highlighter-rouge">development</code></p>
+  </li>
+</ul>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/add_realm.png" class="figure-img img-fluid rounded" alt="Add new realm"><figcaption class="figure-caption text-center">Add new realm</figcaption></figure>
+
+<ul>
+  <li>Create a client for our Fuse Spring microservice.</li>
+</ul>
+
+<p>Go to the newly created <code class="language-plaintext highlighter-rouge">development</code> realm, click on clients to add a new one with</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Client ID       : fuse-springboot-rest
+Client Protocol : openid-connect
+</code></pre></div></div>
+
+<ul>
+  <li>Configure the client</li>
+</ul>
+
+<p>SSO is running port 8080, make sure your microservice runs on another port. In this example, the api is configured to run on 8888. (cofigured in application.properties - server.port=8888)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Access Type         : confidential
+Valid Redirect URIs : http://localhost:8888
+# Required for micro-service to micro-service secured calls
+Service Accounts Enabled : On
+Authorization Enabled : On
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Note: Access Type confidential supports getting access token using client credentials grant as well as authorization code grant. If a micro-service needs to call another micro-service, caller will be ‘confidential’ and callee will be ‘bearer-only’.
+</code></pre></div></div>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/configure_client.png" class="figure-img img-fluid rounded" alt="Configure client"><figcaption class="figure-caption text-center">Configure client</figcaption></figure>
+
+<ul>
+  <li>Create Client Role</li>
+</ul>
+
+<p>Create a Role within the client called <code class="language-plaintext highlighter-rouge">user</code></p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/add_client_role.png" class="figure-img img-fluid rounded" alt="Add role within client"><figcaption class="figure-caption text-center">Add role within client</figcaption></figure>
+
+<ul>
+  <li>Create User</li>
+</ul>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/new_user.png" class="figure-img img-fluid rounded" alt="Create new user"><figcaption class="figure-caption text-center">Create new user</figcaption></figure>
+
+<ul>
+  <li>Assign password to user</li>
+</ul>
+
+<p>We need to give a password to our created user, lets go ahead and give it <code class="language-plaintext highlighter-rouge">john</code> -&gt; Super Safe!!</p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/user_password.png" class="figure-img img-fluid rounded" alt="User Role"><figcaption class="figure-caption text-center">User Role</figcaption></figure>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NOTE:
+
+If you want the user to change the password on the first login, select `Temporary`
+</code></pre></div></div>
+
+<ul>
+  <li>Associate Client Role to User</li>
+</ul>
+
+<p>This is to provide access to the client (our fuse microservice). The Role within the Client needs to be assigned to the User.</p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/user_role.png" class="figure-img img-fluid rounded" alt="User Role"><figcaption class="figure-caption text-center">User Role</figcaption></figure>
+
+<ul>
+  <li>Get Configuration From OpenID Configuration Endpoint</li>
+</ul>
+
+<p>SSO is OpenID Connect and OAuth2 compliant, below is OpenID Connection configuration URL to get details about all security endpoints:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET http://127.0.0.1:8080/auth/realms/development/.well-known/openid-configuration
+</code></pre></div></div>
+
+<p>Important URLS to be copied from response:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>issuer : http://127.0.0.1:8080/auth/realms/development
+authorization_endpoint: ${issuer}/protocol/openid-connect/auth
+token_endpoint: ${issuer}/protocol/openid-connect/token
+
+token_introspection_endpoint: ${issuer}/protocol/openid-connect/token/introspect
+userinfo_endpoint: ${issuer}/protocol/openid-connect/userinfo
+Response also contains grant types and scopes supported
+grant_types_supported: ["client_credentials", …]
+scopes_supported: ["openid", …]
+</code></pre></div></div>
+
+<ul>
+  <li>Get Access Token Using Postman (For Testing)</li>
+</ul>
+
+<p>An SSO access token is a <a href="https://jwt.io/">JWT</a>. Each field in that JSON is called a claim. By default, logged in username is returned in a claim named “preferred_username” in the access token. Later we configure our Spring Boot application with the key-value keycloak.principal-attribute=preferred_username in the application.properties</p>
+
+<p><strong>Steps</strong></p>
+
+<p>Go to Postman and create a new request.</p>
+
+<p>Select the Authorization tab and select type <code class="language-plaintext highlighter-rouge">OAuth 2.0</code> -&gt; <code class="language-plaintext highlighter-rouge">Get New Access Token</code></p>
+
+<p>Select Authorization Type as OAuth 2.0, click on ‘Get New Access Token’ and enter following details.</p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/postman.png" class="figure-img img-fluid rounded" alt="Request Token from Postman"><figcaption class="figure-caption text-center">Request Token from Postman</figcaption></figure>
+
+<p>If you click <code class="language-plaintext highlighter-rouge">Request Token</code> it will redirect you to the SSO realm login page. Enter <code class="language-plaintext highlighter-rouge">John/John</code></p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/postman_sso.png" class="figure-img img-fluid rounded" alt="Post Redirected to SSO"><figcaption class="figure-caption text-center">Post Redirected to SSO</figcaption></figure>
+
+<p>A window appears with the Token to be used by the client. Save it!! This is a temporary token, so each time you want to make a request, you have to request a new one.</p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/user_access_token.png" class="figure-img img-fluid rounded" alt="Client Access Token"><figcaption class="figure-caption text-center">Client Access Token</figcaption></figure>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NOTES:
+
+- Make sure you select client authentication as “Send client credentials in body” while requesting token.
+
+- Callback URL is redirect URL configured in SSO.
+
+- Client secret may be different for you, copy the one from client configuration in SSO.
+
+- You may also use https://jwt.io to inspect the contents of token received.
+</code></pre></div></div>
+
+<p>Lets go to <a href="https://jwt.io">jwt</a> and validate our token. Just copy the token and paste it in the jwt Debugger.</p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/token_validation.png" class="figure-img img-fluid rounded" alt="Token Validation"><figcaption class="figure-caption text-center">Token Validation</figcaption></figure>
+
+<p><strong>Looks Good!</strong></p>
+
+<h2 id="2-fuse-spring-boot-microservice">2. Fuse Spring Boot Microservice</h2>
+
+<p>Lets create a simple Microservice with a REST interface, running on Spring Boot Standalone.</p>
+
+<h3 id="21-pre-requisites">2.1 Pre-Requisites</h3>
+
+<p>You should have Code Ready Studio and Fuse tooling installed. Not mandatory, but it makes things easier.
+(<a href="https://developers.redhat.com/blog/2019/05/29/how-to-set-up-red-hat-codeready-studio-12-integration-tooling">If not, then follow this</a>)</p>
+
+<hr>
+<h3 id="22-steps-to-create-the-microservice">2.2 Steps to create the microservice</h3>
+
+<ul>
+  <li>
+    <p>On Code Ready Studio create a new <code class="language-plaintext highlighter-rouge">Fuse Integration Project</code>. I am using Fuse version <code class="language-plaintext highlighter-rouge">7.5.0.fuse-750029-redhat-00002 (Fuse 7.5.0 GA)</code></p>
+  </li>
+  <li>
+    <p>We are going to use Camel REST Component to implement our REST API. In your Maven POM, add camel-servlet-starter as a dependency. This will allow Camel to deploy our service into the embedded Tomcat container:</p>
+  </li>
+</ul>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependency&gt;</span>
+  <span class="nt">&lt;groupId&gt;</span>org.apache.camel<span class="nt">&lt;/groupId&gt;</span>
+  <span class="nt">&lt;artifactId&gt;</span>camel-servlet-starter<span class="nt">&lt;/artifactId&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Add camel-jackson-starter as a dependency. This will allow Camel to marshal to/from JSON:</li>
+</ul>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependency&gt;</span>
+  <span class="nt">&lt;groupId&gt;</span>org.apache.camel<span class="nt">&lt;/groupId&gt;</span>
+  <span class="nt">&lt;artifactId&gt;</span>camel-jackson-starter<span class="nt">&lt;/artifactId&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>add a restConfiguration element to your camel context</li>
+</ul>
+
+<p><code class="language-plaintext highlighter-rouge">JAVA DSL </code></p>
+
+<p>In the RouteBuilder of your new project, add a restConfiguration() element.</p>
+
+<p>This initialises the component that will provide the REST service. In this example we’re using the Servlet component for this.</p>
+
+<p>We do this first before defining any operations for the service:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="o">()</span> <span class="kd">throws</span> <span class="nc">Exception</span> <span class="o">{</span>
+    <span class="n">restConfiguration</span><span class="o">()</span>
+            <span class="o">.</span><span class="na">component</span><span class="o">(</span><span class="s">"servlet"</span><span class="o">)</span>
+            <span class="o">.</span><span class="na">bindingMode</span><span class="o">(</span><span class="nc">RestBindingMode</span><span class="o">.</span><span class="na">auto</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">XML DSL</code></p>
+
+<p>Insert this inside the Camel Context xml element</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;restConfiguration</span> <span class="na">bindingMode=</span><span class="s">"auto"</span> <span class="na">component=</span><span class="s">"servlet"</span><span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Define a REST endpoint, and add skeletons for each of your operations - GET, POST, etc.</li>
+</ul>
+
+<p>First, define a REST endpoint, using rest, with the path (URI) of your service. Then append each of your operations - these are your HTTP verbs.</p>
+
+<p><code class="language-plaintext highlighter-rouge">JAVA DSL</code></p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">rest</span><span class="o">(</span><span class="s">"/api/hello"</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">get</span><span class="o">().</span><span class="na">route</span><span class="o">().</span><span class="na">to</span><span class="o">(</span><span class="s">"..."</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">post</span><span class="o">().</span><span class="na">route</span><span class="o">().</span><span class="na">to</span><span class="o">(</span><span class="s">"..."</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">delete</span><span class="o">().</span><span class="na">route</span><span class="o">().</span><span class="na">to</span><span class="o">(</span><span class="s">"..."</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">XML DSL</code></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rest</span> <span class="na">path=</span><span class="s">"/api/hello"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;get&gt;</span>
+        <span class="nt">&lt;route&gt;</span>
+            <span class="nt">&lt;to</span> <span class="na">uri=</span><span class="s">"..."</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/route&gt;</span>
+    <span class="nt">&lt;/get&gt;</span>
+    <span class="nt">&lt;post&gt;</span>
+        <span class="nt">&lt;route&gt;</span>
+            <span class="nt">&lt;to</span> <span class="na">uri=</span><span class="s">"..."</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/route&gt;</span>
+    <span class="nt">&lt;/post&gt;</span>
+<span class="nt">&lt;/rest&gt;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Now build your Camel routes for your REST operations! Here’s an example of a REST service that’s been filled out:</li>
+</ul>
+
+<p><code class="language-plaintext highlighter-rouge">JAVA DSL</code></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="o">()</span> <span class="kd">throws</span> <span class="nc">Exception</span> <span class="o">{</span>
+
+        <span class="n">restConfiguration</span><span class="o">()</span>
+        <span class="o">.</span><span class="na">component</span><span class="o">(</span><span class="s">"servlet"</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">bindingMode</span><span class="o">(</span><span class="nc">RestBindingMode</span><span class="o">.</span><span class="na">auto</span><span class="o">);</span>
+        
+        <span class="n">rest</span><span class="o">(</span><span class="s">"/hello"</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">get</span><span class="o">().</span><span class="na">route</span><span class="o">().</span><span class="na">bean</span><span class="o">(</span><span class="nc">HelloBean</span><span class="o">.</span><span class="na">class</span> <span class="o">,</span> <span class="s">"sayHello"</span><span class="o">);</span>
+        <span class="c1">//("bean:HelloBean?method=sayHello");</span>
+    <span class="o">}</span>
+    
+    <span class="nd">@Bean</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">"helloWorld"</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="nc">HelloBean</span> <span class="nf">helloBean</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nf">HelloBean</span><span class="o">();</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;bean</span> <span class="na">id=</span><span class="s">"helloBean"</span> <span class="na">class=</span><span class="s">"org.mycompany.HelloBean"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;rest</span> <span class="na">path=</span><span class="s">"/hello"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;get&gt;</span>
+        <span class="nt">&lt;route&gt;</span>
+            <span class="nt">&lt;bean</span> <span class="na">ref=</span><span class="s">"helloBean"</span> <span class="na">method=</span><span class="s">"hello"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;/route&gt;</span>
+    <span class="nt">&lt;/get&gt;</span>
+<span class="nt">&lt;/rest&gt;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Create a simple Bean to handle your api operations</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Component</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">HelloBean</span> <span class="o">{</span>
+    <span class="cm">/*
+     * Add a method to say Hello
+     * Use as input the parameter the body received and concatenate it with "Hello World ! " text
+     */</span>
+	<span class="kd">public</span> <span class="nc">String</span> <span class="nf">sayHello</span><span class="o">(</span><span class="nc">Exchange</span> <span class="n">exchange</span><span class="o">)</span> <span class="o">{</span>
+		<span class="nc">String</span> <span class="n">body</span> <span class="o">=</span> <span class="o">(</span><span class="nc">String</span><span class="o">)</span><span class="n">exchange</span><span class="o">.</span><span class="na">getIn</span><span class="o">().</span><span class="na">getBody</span><span class="o">();</span>
+		<span class="k">return</span> <span class="s">"Hello world ! "</span> <span class="o">+</span> <span class="n">body</span><span class="o">;</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Add servlet mapping to the application.properties (/src/main/resources) - by default, Camel maps incoming requests to /camel/*</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>camel.component.servlet.mapping.context-path=/api/*
+</code></pre></div></div>
+
+<ul>
+  <li>Run and test</li>
+</ul>
+
+<p>Right Click on your project -&gt; Run as -&gt; Maven build … -&gt; Goals: spring-boot:run</p>
+
+<p>Test</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> GET http://localhost:8888/api/hello
+
+<span class="s2">"Hello world !
+</span></code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">That’s it! Now keep building up your REST API with as many endpoints and operations as you need!!</code></p>
+
+<h4 id="221-extra-steps">2.2.1 Extra Steps</h4>
+
+<ul>
+  <li>To add support for automatically converting requests and responses to/from JSON, define POJOs representing your request and response messages, e.g.:</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">CreateCustomerResponse</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="nc">String</span> <span class="n">result</span><span class="o">;</span>
+    <span class="c1">// Add some getters and setters here...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Now, declare your request and response types, so that Camel knows how to marshal them to/from JSON:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">rest</span><span class="o">()</span>
+    <span class="o">.</span><span class="na">post</span><span class="o">()</span>
+        <span class="o">.</span><span class="na">route</span><span class="o">()</span>
+        <span class="o">.</span><span class="na">type</span><span class="o">(</span><span class="nc">Customer</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">outType</span><span class="o">(</span><span class="nc">CreateCustomerResponse</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">to</span><span class="o">(</span><span class="s">"direct:post"</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>And also ensure that you’ve set binding mode in the REST configuration:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">restConfiguration</span><span class="o">()</span>
+    <span class="o">.</span><span class="na">component</span><span class="o">(</span><span class="s">"servlet"</span><span class="o">)</span>
+    <span class="o">.</span><span class="na">bindingMode</span><span class="o">(</span><span class="nc">RestBindingMode</span><span class="o">.</span><span class="na">auto</span><span class="o">);</span>
+</code></pre></div></div>
+
+<hr>
+
+<h3 id="23-configure-the-microservice-to-be-secured-with-sso">2.3 Configure the microservice to be secured with SSO</h3>
+
+<p>The Keycloak Spring Boot adapter takes advantage of Spring Boot’s autoconfiguration so all you need to do is add the Keycloak Spring Boot starter to your project</p>
+
+<p>Currently the following embedded containers are supported and do not require any extra dependencies if using the Starter:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Tomcat
+Undertow
+Jetty
+</code></pre></div></div>
+
+<ul>
+  <li>Dependencies</li>
+</ul>
+
+<p>Add the Adapter BOM dependency</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependencyManagement&gt;</span>
+  <span class="nt">&lt;dependencies&gt;</span>
+    <span class="nt">&lt;dependency&gt;</span>
+      <span class="nt">&lt;groupId&gt;</span>org.keycloak.bom<span class="nt">&lt;/groupId&gt;</span>
+      <span class="nt">&lt;artifactId&gt;</span>keycloak-adapter-bom<span class="nt">&lt;/artifactId&gt;</span>
+      <span class="nt">&lt;version&gt;</span>3.4.17.Final-redhat-00001<span class="nt">&lt;/version&gt;</span>
+      <span class="nt">&lt;type&gt;</span>pom<span class="nt">&lt;/type&gt;</span>
+      <span class="nt">&lt;scope&gt;</span>import<span class="nt">&lt;/scope&gt;</span>
+    <span class="nt">&lt;/dependency&gt;</span>
+  <span class="nt">&lt;/dependencies&gt;</span>
+<span class="nt">&lt;/dependencyManagement&gt;</span>
+</code></pre></div></div>
+
+<p>Add the Keycloak/SSO Spring dependency</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;dependency&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>org.keycloak<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>keycloak-spring-boot-starter<span class="nt">&lt;/artifactId&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Keycloak Spring Boot Adapter Configuration</li>
+</ul>
+
+<p>Using Spring Boot Configuration (application.properties)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>keycloak.realm = development
+keycloak.principal-attribute=preferred_username
+keycloak.auth-server-url = http://127.0.0.1:8080/auth
+keycloak.ssl-required = external
+keycloak.resource = fuse-springboot-rest
+keycloak.credentials.secret = 1ff63f52-9a6d-4da4-8d38-0eaafd0fd860
+keycloak.use-resource-role-mappings = true
+</code></pre></div></div>
+
+<p>If you don’t remember all the details, go to SSO with the admin account, select our <code class="language-plaintext highlighter-rouge">fuse-springboot-rest client</code> -&gt; Installation -&gt; Format option=<code class="language-plaintext highlighter-rouge">Keycloak OIDC JSON</code> and you get the necessary details such as secret</p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/sso_client_installation.png" class="figure-img img-fluid rounded" alt="Client Installation"><figcaption class="figure-caption text-center">Client Installation</figcaption></figure>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NOTE:
+You can disable the Keycloak Spring Boot Adapter (for example in tests) by setting keycloak.enabled = false
+</code></pre></div></div>
+
+<ul>
+  <li>Specify JavaEE security configuration</li>
+</ul>
+
+<p>You also need to specify the Java EE Security Constraints that would normally go in the <code class="language-plaintext highlighter-rouge">web.xml</code>. In this case we can simply use our Spring Configuration.</p>
+
+<p>The Spring Boot Adapter will set the login-method to KEYCLOAK and configure the security-constraints at startup time.</p>
+
+<p>Here’s an example configuration:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>keycloak.securityConstraints[0].authRoles[0]=user
+keycloak.securityConstraints[0].securityCollections[0].patterns[0]=/*
+</code></pre></div></div>
+<p>With this configurations we are defining that every request to all our api endpoints should be done with an authenticated user. That user should have a role <code class="language-plaintext highlighter-rouge">user</code>.</p>
+
+<ul>
+  <li>Final Spring Configuration</li>
+</ul>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/spring_config.png" class="figure-img img-fluid rounded" alt="Spring Configuration"><figcaption class="figure-caption text-center">Spring Configuration</figcaption></figure>
+
+<ul>
+  <li>Test</li>
+</ul>
+
+<p>Lets start our application!!</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mvn clean spring-boot:run
+</code></pre></div></div>
+
+<p>Go back to Postman, remember we already have our Access Token. If it has expired, then request a new one.</p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/postman_access_token.png" class="figure-img img-fluid rounded" alt="Access Token"><figcaption class="figure-caption text-center">Access Token</figcaption></figure>
+
+<p>Send a request to your microservice api endpoint and analyze the request headers. Note the Authorization Bearer, which is our token.</p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/sso/request_header.png" class="figure-img img-fluid rounded" alt="Request Headers"><figcaption class="figure-caption text-center">Request Headers</figcaption></figure>
+
+<p><strong>DONE!</strong></p>
+
+<p>Feel free to look at the microservice <a href="https://github.com/seravat/sso-fuse-springboot-rest">repo</a></p>
+
+<h2 id="references">References</h2>
+
+<p><a href="https://github.com/aelkz/ocp-sso/blob/master/README.pt-br.md">Quickstart Project</a></p>
+
+<p><a href="https://github.com/redhat-developer/redhat-sso-quickstarts#keycloak">Red Hat SSO Quickstarts</a></p>
+
+<p><a href="https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/html/getting_started_guide/install-boot">SSO Installation Guide</a></p>
+
+<p><a href="https://medium.com/@bcarunmail/securing-rest-api-using-keycloak-and-spring-oauth2-6ddf3a1efcc2">SSO Configuration</a></p>
+
+<p><a href="https://tomd.xyz/camel-rest/">Tom Donohue’s Blog</a></p>
+
+<p><a href="https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.2/html-single/securing_applications_and_services_guide/index#spring_boot_adapter">Red Hat Documentation</a></p>
+
+<p><a href="https://www.baeldung.com/spring-boot-keycloak">Baeldung</a></p>
+
+<p><a href="https://www.keycloak.org/2017/05/easily-secure-your-spring-boot.html">Secure your Spring Boot Application</a></p>
+
+<p><a href="https://medium.com/keycloak/secure-spring-boot-2-using-keycloak-f755bc255b68">Secure Spring Boot with Keycloak</a></p>
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    by <strong>Joao Tavares</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center">
+<a class="social mx-1" href="https://www.behance.net/seravat" style="color: #6c757d" onmouseover="this.style.color='#1769ff'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-behance fa-1x"></i>
+    </a><a class="social mx-1" href="mailto:tavares.joaomc@gmail.com" style="color: #6c757d" onmouseover="this.style.color='#db4437'" onmouseout="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.facebook.com/your_username" style="color: #6c757d" onmouseover="this.style.color='#3b5998'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-facebook fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.github.com/seravat" style="color: #6c757d" onmouseover="this.style.color='#333333'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.linkedin.com/in/joao-tavares-0542084a" style="color: #6c757d" onmouseover="this.style.color='#007bb5'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1" href="https://medium.com/@your_username" style="color: #6c757d" onmouseover="this.style.color='#00ab6c'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.twitter.com/your_username" style="color: #6c757d" onmouseover="this.style.color='#1da1f2'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-twitter fa-1x"></i>
+    </a>
+
+</div>
+<small id="attribution">
+    theme <a href="https://github.com/seravat/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>
