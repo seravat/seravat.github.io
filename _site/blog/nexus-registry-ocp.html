@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=""I turn coffee :coffee: into code, use tabs over spaces and never broke production."">
+
+  <title>myCodeHat</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>myCodeHat</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto">
+<a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Deploy and Configure Nexus as registry proxy on Openshift 3.11</b></h1>
+
+<p class="post-metadata text-muted">
+  30 March 2020 -  
+  <b>7 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#red-hat">
+      <span class="tag badge badge-pill text-primary border border-primary">Red Hat</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#openshift">
+      <span class="tag badge badge-pill text-primary border border-primary">Openshift</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#nexus">
+      <span class="tag badge badge-pill text-primary border border-primary">Nexus</span>
+    </a>
+    </p>
+
+<p>In this example we deploy a Nexus 3.x instance to Openshift 3.11 with persistence to serve as a registry proxy to the official <a href="registry.redhat.io">Red Hat Registry</a></p>
+
+<h2 id="1-deploy-nexus-on-openshift">1. Deploy Nexus on Openshift</h2>
+
+<p>Lets use a persistent nexus template forked from <a href="https://github.com/OpenShiftDemos/nexus">Openshift Demos</a></p>
+
+<ul>
+  <li>Import the template to Openshift. Usually templates exist in the openshift namespace</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc create -f https://raw.githubusercontent.com/OpenShiftDemos/nexus/master/nexus3-persistent-template.yaml -n openshift
+</code></pre></div></div>
+
+<ul>
+  <li>Create a new project to host our Nexus</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc new-project nexus
+</code></pre></div></div>
+
+<ul>
+  <li>Create a new Nexus application using the imported template. Lets also modify the Nexus version and the persistent volume claim size.</li>
+</ul>
+
+<p>NOTE: We are assuming your cluster already has provisioned PVs or can dynamically provision PVs</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc new-app nexus3-persistent -p NEXUS_VERSION=3.21.2 -p VOLUME_CAPACITY=5Gi
+</code></pre></div></div>
+
+<ul>
+  <li>Wait for the pod to start and verify Nexus is running properly - Login using admin/admin123</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc get routes
+
+...
+
+NAME      HOST/PORT                                   PATH      SERVICES   PORT       TERMINATION   WILDCARD
+nexus     nexus-nexus.apps.xxxx.example.opentlc.com             nexus      8081-tcp                 None
+</code></pre></div></div>
+
+<ul>
+  <li>Login using the route, it will say that the admin password is located in /nexus-data/admin.password - ssh into your pod and retrieve the admin password. Follow the wizard to setup a new admin password.</li>
+</ul>
+
+<figure class="figure w-100">
+  <img src="/assets/images/nexus/login.png" class="figure-img img-fluid rounded" alt="Nexus first login"><figcaption class="figure-caption text-center">Nexus first login</figcaption></figure>
+
+<h2 id="2-configure-as-redhat-registry-proxy">2. Configure as redhat registry proxy</h2>
+
+<h3 id="21-create-a-new-blob-store-on-nexus-to-keep-our-images">2.1 Create a new Blob Store on Nexus to keep our images</h3>
+
+<figure class="figure w-100">
+  <img src="/assets/images/nexus/blob_store.png" class="figure-img img-fluid rounded" alt="Create new blob store"><figcaption class="figure-caption text-center">Create new blob store</figcaption></figure>
+
+<h3 id="22-create-a-new-proxy-repository">2.2 Create a new proxy repository</h3>
+
+<ul>
+  <li>Select the name, configure and http connector on port 5000, allow Docker v1 API and add the  <a href="https://registry.redhat.io">Red Hat registry</a>
+</li>
+</ul>
+
+<figure class="figure w-100">
+  <img src="/assets/images/nexus/proxy_repo.png" class="figure-img img-fluid rounded" alt="Create new proxy repository"><figcaption class="figure-caption text-center">Create new proxy repository</figcaption></figure>
+
+<ul>
+  <li>Add the certificate to Nexus truststore - click <code class="language-plaintext highlighter-rouge">View Certificate</code> and add to the truststore on the windows that opens</li>
+</ul>
+
+<figure class="figure w-100">
+  <img src="/assets/images/nexus/proxy_repo1.png" class="figure-img img-fluid rounded" alt="Create new proxy repository"><figcaption class="figure-caption text-center">Create new proxy repository</figcaption></figure>
+
+<ul>
+  <li>Storage - select the blob store we created before</li>
+</ul>
+
+<figure class="figure w-100">
+  <img src="/assets/images/nexus/proxy_repo2.png" class="figure-img img-fluid rounded" alt="Create new proxy repository"><figcaption class="figure-caption text-center">Create new proxy repository</figcaption></figure>
+
+<h3 id="23-expose-the-registry-port">2.3 Expose the registry port</h3>
+
+<p>Now we want to be able to access our proxy registry from outside Openshift.
+Remember we configured an http connector on our proxy registry on port 5000 of our Nexus instance.</p>
+
+<p>We had to expose the port <code class="language-plaintext highlighter-rouge">5000</code> on our container - Lets edit the DeploymentConfig of our nexus. This can be done through the console, using <code class="language-plaintext highlighter-rouge">oc edit</code> or <code class="language-plaintext highlighter-rouge">oc patch</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  oc patch dc nexus -p '{"spec":{"template":{"spec":{"containers":[{"name":"nexus","ports":[{"containerPort": 5000,"protocol":"TCP","name":"docker"}]}]}}}}'
+</code></pre></div></div>
+
+<p>A new pod will be provisioned due to the DeploymentConfig change.</p>
+
+<p>After exposing the port on the container we need to add that port to our service</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc expose dc nexus --name=nexus-registry --port=5000
+</code></pre></div></div>
+
+<h3 id="24-create-a-secure-route-to-the-registry-tls">2.4 Create a secure Route to the Registry (TLS)</h3>
+
+<p>We can expose an insecure route and add that exception to the configuration of our local docker daemon, however it is not the best way to go about it. We are going to expose a secure Route</p>
+
+<p>We’ll encrypt traffic using OpenShift’s edge SSL termination. When this option is chosen, the service will be exposed externally on port 443. A very basic way of doing this is using:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc create route edge nexus-registry --service=nexus-registry
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">HOWEVER!</code> If you’re following this guide using minishift, or another local demo OpenShift cluster then you’re probably going to need to create a certificate for this service - normally Openshift production servers have root CA’s created by the organization. So follow the steps below to create a root certificate authority (CA), a certificate for your service, and then configure Docker to trust your cert.</p>
+
+<h4 id="241-create-root-certificate-authority-ca-using-openssl">2.4.1 Create root certificate authority (CA) using openssl</h4>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NEXUS_HOSTNAME=nexus-registry-nexus.apps.8aa4.example.opentlc.com
+openssl genrsa -des3 -out rootCA.key 4096
+
+cat &lt;&lt; EOF &gt; openssl.conf
+[ req ]
+distinguished_name=dn
+[ dn ]
+[ root_ca ]
+basicConstraints = critical, CA:true
+EOF
+
+openssl req -x509 -config openssl.conf \
+-extensions root_ca -new -nodes \
+-key rootCA.key -sha256 -days 1024 \
+-subj "/CN=EggRootCertificate" \
+-out rootCA.crt
+</code></pre></div></div>
+
+<h4 id="242-create-a-certificate-signing-request-csr-for-the-nexus-registry-route-and-sign-it-with-the-root-ca">2.4.2 Create a certificate signing request (CSR) for the Nexus registry route and sign it with the root CA</h4>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl genrsa -out ${NEXUS_HOSTNAME}.key 2048
+
+openssl req -new -sha256 \
+-key ${NEXUS_HOSTNAME}.key \
+-subj "/C=GB/ST=London/L=London/O=EggCorp/CN=${NEXUS_HOSTNAME}" \
+-out ${NEXUS_HOSTNAME}.csr
+
+openssl x509 -req -in ${NEXUS_HOSTNAME}.csr \
+-CA rootCA.crt -CAkey rootCA.key \
+-CAcreateserial -out ${NEXUS_HOSTNAME}.crt \
+-days 500 -sha256
+</code></pre></div></div>
+
+<h4 id="243-create-the-route-using-the-certificate-key-and-ca-certificate">2.4.3 Create the Route, using the certificate, key and CA certificate</h4>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc create route edge nexus-registry --service=nexus-registry \
+--hostname=${NEXUS_HOSTNAME} \
+--key=${NEXUS_HOSTNAME}.key \
+--cert=${NEXUS_HOSTNAME}.crt \
+--ca-cert=rootCA.crt
+</code></pre></div></div>
+
+<h3 id="25-configure-docker-to-trust-the-certificate">2.5 Configure Docker to trust the certificate</h3>
+
+<p>In this case I am using a Mac and need to add it to the keychain:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo security add-trusted-cert -d \
+    -r trustRoot \
+    -k /Library/Keychains/System.keychain \
+    rootCA.crt
+</code></pre></div></div>
+
+<p>Restart your Docker Daemon
+If you’re still having issues with “certificate signed by unknown authority” then try restarting your Mac entirely (fixed it for me).</p>
+
+<h4 id="251-test-the-connection-to-our-nexus-docker-registry">2.5.1 Test the connection to our Nexus Docker Registry</h4>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc get route | grep nexus-registry
+
+...
+nexus-registry-nexus.apps.8aa4.example.opentlc.com
+
+docker login nexus-registry-nexus.apps.8aa4.example.opentlc.com
+
+</code></pre></div></div>
+
+<h3 id="26-allow-openshift-to-pull-images-from-the-docker-proxy-registry">2.6 Allow Openshift to pull images from the Docker Proxy Registry</h3>
+
+<p>We need to add a new configuration to allow Openshift to pull images through our repository. Also, just for this test we are going to create a new https route without certificates that allows insecure traffic.</p>
+
+<h3 id="261-create-unsecured-route">2.6.1 Create unsecured route</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app: nexus
+    template: nexus3-persistent-template
+  name: nexus-registry
+  namespace: nexus
+spec:
+  host: nexus-registry-nexus.apps.8aa4.example.opentlc.com
+  tls:
+    insecureEdgeTerminationPolicy: Allow
+    termination: edge
+  to:
+    kind: Service
+    name: nexus-registry
+    weight: 100
+  wildcardPolicy: None
+</code></pre></div></div>
+
+<h3 id="262-configure-openshift-to-allow-this-new-registry">2.6.2 Configure Openshift to allow this new registry</h3>
+
+<p>To add our new registry as accepted on Openshift, lets edit the Openshift Master configuration file <code class="language-plaintext highlighter-rouge">/etc/origin/master-config.yaml</code>.</p>
+
+<p>Find the section <code class="language-plaintext highlighter-rouge">imagePolicyConfig</code></p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/nexus/imagepolicyconfig.png" class="figure-img img-fluid rounded" alt="Openshift master-config.yaml"><figcaption class="figure-caption text-center">Openshift master-config.yaml</figcaption></figure>
+
+<p>Add a new entry, which should be our secure Route created before:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>- domainName: '*.apps.8aa4.example.opentlc.com'
+  insecure: true
+</code></pre></div></div>
+
+<p>This entry means that Openshift allows image-pull from using that hostname.</p>
+
+<p>Restart your master(s)</p>
+
+<h3 id="263-create-a-new-secret-with-the-repository-credentials-or-allow-anonymous-pullers-from-nexus">2.6.3 Create a new secret with the repository credentials OR allow anonymous pullers from Nexus</h3>
+
+<p><code class="language-plaintext highlighter-rouge">METHOD 1 - Create pull secret</code></p>
+
+<p>If you can’t pull images from the registry, add a new secret and link it to the default service account</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc create secret docker-registry rh-proxy  \
+--docker-server=http://nexus-registry-nexus.apps.8aa4.example.opentlc.com  \
+--docker-username=admin     \
+--docker-password=admin123
+
+oc secrets link default rh-proxy --for=pull
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">METHOD 2 - Allow anonymous pulls from Nexus</code></p>
+
+<p>Go into our registry configuration in Nexus and allow anonymous pulls</p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/nexus/anonymous_pull.png" class="figure-img img-fluid rounded" alt="Allow anonymous pull from the registry"><figcaption class="figure-caption text-center">Allow anonymous pull from the registry</figcaption></figure>
+
+<p>Activate the Docker Bearer Token realm in Nexus security tab</p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/nexus/anonymous_pull1.png" class="figure-img img-fluid rounded" alt="Docker Bearer Token realm"><figcaption class="figure-caption text-center">Docker Bearer Token realm</figcaption></figure>
+
+<p><code class="language-plaintext highlighter-rouge">NOTE 1:</code></p>
+
+<p>If we wanted to use the secure route to our repo, we would need to <a href="https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html">add the route certificates to the Openshift chain</a></p>
+
+<p><code class="language-plaintext highlighter-rouge">NOTE 2:</code></p>
+
+<p>We tried to configure an https connector on our Nexus repository exposed on port 443. Also exposed that port on the container and created a service.</p>
+
+<figure class="figure w-100">
+  <img src="/assets/images/nexus/nexus_https.png" class="figure-img img-fluid rounded" alt="Configure https connector in Nexus"><figcaption class="figure-caption text-center">Configure https connector in Nexus</figcaption></figure>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc patch dc nexus -p '{"spec":{"template":{"spec":{"containers":[{"name":"nexus","ports":[{"containerPort": 443,"protocol":"TCP","name":"docker-ssl"}]}]}}}}'
+
+oc expose dc nexus --name=nexus-registry-ssl --port=443
+</code></pre></div></div>
+
+<p>We were unable to use this to pull to Openshift - adding also the domain to the master-config.yaml</p>
+
+<h2 id="3-references">3. References</h2>
+
+<p>https://help.sonatype.com/repomanager3/security/realms</p>
+
+<p>https://medium.com/flowfactor/creating-a-private-external-image-registry-for-openshift-4-3-a67fc27cd5a4</p>
+
+<p>https://tomd.xyz/openshift-nexus-docker-registry/</p>
+
+<p>https://community.sonatype.com/t/to-proxy-openshift-registry-with-nexus-oss-registry-proxy/3021</p>
+
+<p>https://help.sonatype.com/repomanager3/formats/docker-registry/proxy-repository-for-docker</p>
+
+<p>https://blog.sonatype.com/using-nexus-3-as-your-repository-part-3-docker-images</p>
+
+<p>https://community.sonatype.com/t/registry-connect-redhat-com-registries-proxy-in-nexus/3718</p>
+
+<p>https://issues.sonatype.org/browse/NEXUS-16718</p>
+
+<p>https://access.redhat.com/solutions/4616891</p>
+
+<p>https://qiita.com/leechungkyu/items/86cad0396cf95b3b6973</p>
+
+<p>https://www.ivankrizsan.se/2016/06/09/create-a-private-docker-registry/</p>
+
+<p>https://blog.sonatype.com/using-nexus-3-as-your-repository-part-3-docker-images</p>
+
+<p>https://mtijhof.wordpress.com/2018/07/23/using-nexus-oss-as-a-proxy-cache-for-docker-images/</p>
+
+<p>https://access.redhat.com/solutions/3654811</p>
+
+<p>https://blog.sonatype.com/using-nexus-3-as-your-repository-part-3-docker-images</p>
+
+<p>https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html/developer_guide/tutorials#nexus-maven-tutorial</p>
+
+<p>https://github.com/seravat/openshift-nexus</p>
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    by <strong>Joao Tavares</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center">
+<a class="social mx-1" href="https://www.behance.net/seravat" style="color: #6c757d" onmouseover="this.style.color='#1769ff'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-behance fa-1x"></i>
+    </a><a class="social mx-1" href="mailto:tavares.joaomc@gmail.com" style="color: #6c757d" onmouseover="this.style.color='#db4437'" onmouseout="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.facebook.com/your_username" style="color: #6c757d" onmouseover="this.style.color='#3b5998'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-facebook fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.github.com/seravat" style="color: #6c757d" onmouseover="this.style.color='#333333'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.linkedin.com/in/joao-tavares-0542084a" style="color: #6c757d" onmouseover="this.style.color='#007bb5'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1" href="https://medium.com/@your_username" style="color: #6c757d" onmouseover="this.style.color='#00ab6c'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.twitter.com/your_username" style="color: #6c757d" onmouseover="this.style.color='#1da1f2'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-twitter fa-1x"></i>
+    </a>
+
+</div>
+<small id="attribution">
+    theme <a href="https://github.com/seravat/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>

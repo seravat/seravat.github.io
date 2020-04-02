@@ -1,6 +1,14 @@
 [
   
     {
+      "title"    : "Deploy and Configure Nexus as registry proxy on Openshift 3.11",
+      "category" : "",
+      "tags"     : "Red Hat, Openshift, Nexus",
+      "url"      : "/blog/nexus-registry-ocp",
+      "date"     : "2020-03-30 00:00:00 +0100"
+    } ,
+  
+    {
       "title"    : "Secure Fuse Applications with RH SSO",
       "category" : "",
       "tags"     : "Fuse, SSO, Red Hat, Spring Boot, Camel, Keycloak",
