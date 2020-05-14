@@ -1,6 +1,14 @@
 [
   
     {
+      "title"    : "Deploy RHPAM on Openshift 3.11 with SSO as auth provider",
+      "category" : "",
+      "tags"     : "Red Hat, Openshift, PAM, Process Automation Manager",
+      "url"      : "/blog/secure-pam-with-sso",
+      "date"     : "2020-04-02 00:00:00 +0100"
+    } ,
+  
+    {
       "title"    : "Deploy and Configure Nexus as registry proxy on Openshift 3.11",
       "category" : "",
       "tags"     : "Red Hat, Openshift, Nexus",

@@ -25,7 +25,7 @@ oc new-project nexus
 
 - Create a new Nexus application using the imported template. Lets also modify the Nexus version and the persistent volume claim size.
 
-NOTE: We are assuming your cluster already has provisioned PVs or can dynamically provision PVs
+> NOTE: We are assuming your cluster already has provisioned PVs or can dynamically provision PVs
 
 ```
 oc new-app nexus3-persistent -p NEXUS_VERSION=3.21.2 -p VOLUME_CAPACITY=5Gi
@@ -245,11 +245,11 @@ Activate the Docker Bearer Token realm in Nexus security tab
 {% include elements/figure.html image="/assets/images/nexus/anonymous_pull1.png" caption="Docker Bearer Token realm" %}
 
 
-`NOTE 1:` 
+> `NOTE 1:` 
 
 If we wanted to use the secure route to our repo, we would need to [add the route certificates to the Openshift chain](https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html)
 
-`NOTE 2:`
+> `NOTE 2:`
 
 We tried to configure an https connector on our Nexus repository exposed on port 443. Also exposed that port on the container and created a service.
 

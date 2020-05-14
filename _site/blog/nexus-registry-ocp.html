@@ -104,7 +104,9 @@
   <li>Create a new Nexus application using the imported template. Lets also modify the Nexus version and the persistent volume claim size.</li>
 </ul>
 
-<p>NOTE: We are assuming your cluster already has provisioned PVs or can dynamically provision PVs</p>
+<blockquote>
+  <p>NOTE: We are assuming your cluster already has provisioned PVs or can dynamically provision PVs</p>
+</blockquote>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc new-app nexus3-persistent -p NEXUS_VERSION=3.21.2 -p VOLUME_CAPACITY=5Gi
 </code></pre></div></div>
@@ -326,11 +328,15 @@ oc secrets link default rh-proxy --for=pull
 <figure class="figure w-100">
   <img src="/assets/images/nexus/anonymous_pull1.png" class="figure-img img-fluid rounded" alt="Docker Bearer Token realm"><figcaption class="figure-caption text-center">Docker Bearer Token realm</figcaption></figure>
 
-<p><code class="language-plaintext highlighter-rouge">NOTE 1:</code></p>
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">NOTE 1:</code></p>
+</blockquote>
 
 <p>If we wanted to use the secure route to our repo, we would need to <a href="https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html">add the route certificates to the Openshift chain</a></p>
 
-<p><code class="language-plaintext highlighter-rouge">NOTE 2:</code></p>
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">NOTE 2:</code></p>
+</blockquote>
 
 <p>We tried to configure an https connector on our Nexus repository exposed on port 443. Also exposed that port on the container and created a service.</p>
 

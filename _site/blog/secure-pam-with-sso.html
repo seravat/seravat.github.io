@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by Youssef Raafat
+  Free for personal and commercial use under the MIT license
+  https://github.com/YoussefRaafatNasry/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content=""I turn coffee :coffee: into code, use tabs over spaces and never broke production."">
+
+  <title>myCodeHat</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css" type="text/css"/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+
+</head>
+
+
+<body class="d-flex flex-column h-100">
+
+  <main class="flex-shrink-0 container mt-5">
+  <nav class="navbar navbar-expand-lg navbar-light">
+
+  <a class="navbar-brand" href="/"><h5><b>myCodeHat</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto">
+<a class="nav-item nav-link " href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link active" href="/blog/">Blog</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      
+
+    </div>
+  </div>
+
+</nav>
+  <div class="col-lg-10 mx-auto mt-5 post">
+  <h1><b>Deploy RHPAM on Openshift 3.11 with SSO as auth provider</b></h1>
+
+<p class="post-metadata text-muted">
+  02 April 2020 -  
+  <b>13 mins read time</b>
+
+  <br>Tags: 
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#red-hat">
+      <span class="tag badge badge-pill text-primary border border-primary">Red Hat</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#openshift">
+      <span class="tag badge badge-pill text-primary border border-primary">Openshift</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#pam">
+      <span class="tag badge badge-pill text-primary border border-primary">PAM</span>
+    </a>
+    
+    <a class="text-decoration-none no-underline" href="/blog/tags#process-automation-manager">
+      <span class="tag badge badge-pill text-primary border border-primary">Process Automation Manager</span>
+    </a>
+    </p>
+
+<p>In this example we deploy a RHPAM 7.4 authoring environment to Openshift 3.11 with authentication handled by RHSSO</p>
+
+<h2 id="1-deploy-pam-on-openshift">1. Deploy PAM on Openshift</h2>
+
+<p>https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.4/html/deploying_a_red_hat_process_automation_manager_authoring_environment_on_red_hat_openshift_container_platform/index</p>
+
+<hr>
+
+<h2 id="11-pre-requisites">1.1 Pre-requisites</h2>
+
+<h3 id="111-verify-that-openshift-has-the-required-image-streams">1.1.1 Verify that Openshift has the required image streams.</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ oc get imagestreamtag -n openshift | grep rhpam74-businesscentral
+$ oc get imagestreamtag -n openshift | grep rhpam74-kieserver
+</code></pre></div></div>
+
+<h3 id="112-if-the-output-of-the-command-is-empty-we-have-to-import-the-image-streams-into-openshift">1.1.2 If the output of the command is empty, we have to import the image streams into Openshift</h3>
+
+<ul>
+  <li>
+    <p>Follow the steps to be able to get images from the <a href="https://access.redhat.com/RegistryAuthentication#registry-service-accounts-for-shared-environments-4">red hat registry</a></p>
+  </li>
+  <li>
+    <p>Select the OpenShift Secret tab and click the link under Download secret to download the YAML secret file.</p>
+  </li>
+  <li>
+    <p>View the downloaded file and note the name that is listed in the name: entry.</p>
+  </li>
+  <li>
+    <p>Enter the following commands:</p>
+  </li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc create -f &lt;file_name&gt;.yaml
+oc secrets link default &lt;secret_name&gt; --for=pull
+oc secrets link builder &lt;secret_name&gt; --for=pull
+
+Replace &lt;file_name&gt; with the name of the downloaded file and &lt;secret_name&gt; with the name that is listed in the name: entry of the file.
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>Download the rhpam-7.4.0-openshift-templates.zip product deliverable file from the <a href="https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&amp;product=rhpam&amp;productChanged=yes">Software Downloads</a> page and extract the rhpam74-image-streams.yaml file.</p>
+  </li>
+  <li>
+    <p>Enter the following command:</p>
+  </li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc create -f rhpam74-image-streams.yaml
+</code></pre></div></div>
+
+<h3 id="113-creating-a-new-openshift-project">1.1.3 Creating a new Openshift Project</h3>
+
+<p>Either throught the console or oc client</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc new-project rhpam-authoring
+</code></pre></div></div>
+
+<h3 id="114-creating-the-secrets-for-process-server">1.1.4 Creating the secrets for Process Server</h3>
+
+<p>Create an SSL certificate for HTTP access to Process Server and provide it to your OpenShift environment as a secret.</p>
+
+<p>Generate an SSL keystore with a private and public key for SSL encryption for Process Server. For more information on how to create a keystore with self-signed or purchased SSL certificates, see <a href="https://access.redhat.com/documentation/en-US/JBoss_Enterprise_Application_Platform/6.1/html-single/Security_Guide/index.html#Generate_a_SSL_Encryption_Key_and_Certificate">Generate a SSL Encryption Key and Certificate</a></p>
+
+<ul>
+  <li>Generate jks Keystore</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ keytool -genkeypair -alias jboss -keyalg RSA -keystore keystore.jks -storepass mykeystorepass --dname "CN=jsmith,OU=Engineering,O=mycompany.com,L=Raleigh,S=NC,C=US"
+
+Verify the keystore:
+$ keytool -list -keystore keystore.jks
+</code></pre></div></div>
+
+<ul>
+  <li>Generate a certificate signing request using the public key from the keystore</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ keytool -certreq -keyalg RSA -alias jboss -keystore keystore.jks -file certreq.csr
+
+Test the newly generated certificate:
+openssl req -in certreq.csr -noout -text
+</code></pre></div></div>
+
+<ul>
+  <li>Optional: Submit your certificate to a Certificate Authority (CA).</li>
+</ul>
+
+<p>A Certificate Authority (CA) can authenticate your certificate so that it is considered trustworthy by third-party clients. The CA supplies you with a signed certificate, and optionally with one or more intermediate certificates.</p>
+
+<ul>
+  <li>Our case: Export a self-signed certificate from the keystore.</li>
+</ul>
+
+<p>If you only need it for testing or internal purposes, you can use a self-signed certificate. You can export one from the keystore you created in step 1 as follows:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>keytool -export -alias jboss -keystore keystore.jks -file server.crt
+</code></pre></div></div>
+
+<ul>
+  <li>Import the signed certificate, along with any intermediate certificates.</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ keytool -import -keystore keystore.jks -alias intermediateCA -file intermediate.ca
+
+$ keytool -import -alias jboss -keystore keystore.jks -file server.crt
+
+Test that your certificates imported successfully:
+$ keytool -list -keystore keystore.jks
+</code></pre></div></div>
+
+<ul>
+  <li>Use the oc command to generate a secret named kieserver-app-secret from the new keystore file</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc create secret generic kieserver-app-secret --from-file=keystore.jks
+</code></pre></div></div>
+
+<h3 id="115-creating-the-secrets-for-business-central">1.1.5 Creating the secrets for Business Central</h3>
+
+<p>Same steps as <code class="language-plaintext highlighter-rouge">Creating the secrets for Process Server</code>, just change the name of the secret</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc create secret generic businesscentral-app-secret --from-file=keystore.jks
+</code></pre></div></div>
+
+<h3 id="116-persistent-volumes">1.1.6 Persistent Volumes</h3>
+
+<p>We need to either have dynamic PV provisioning or previously created PVs.</p>
+
+<p>If using GlusterFS, please follow this <a href="https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.4/html/deploying_a_red_hat_process_automation_manager_authoring_environment_on_red_hat_openshift_container_platform/dm-openshift-prepare-con">configuration - step 2.5</a></p>
+
+<h3 id="117-preparing-a-maven-mirror-repository-for-offline-use">1.1.7 Preparing a Maven mirror repository for offline use</h3>
+
+<p>If your Red Hat OpenShift Container Platform environment does not have outgoing access to the public Internet, you must prepare a Maven repository with a mirror of all the necessary artifacts and make this repository available to your environment.</p>
+
+<p>Follow <a href="https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.4/html/deploying_a_red_hat_process_automation_manager_authoring_environment_on_red_hat_openshift_container_platform/dm-openshift-prepare-con">step 2.6</a></p>
+
+<hr>
+
+<h2 id="12-deployment">1.2 Deployment</h2>
+
+<p>We will use the <code class="language-plaintext highlighter-rouge">rhpam74-authoring-ha.yaml</code> template to deploy a HA authoring environment. It creates a MySQL pod to provide the database for the Process Server - if we want another database, then we have to <a href="https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.4/html/deploying_a_red_hat_process_automation_manager_authoring_environment_on_red_hat_openshift_container_platform/environment-authoring-con#environment-authoring-ha-modify-proc">customize the template</a></p>
+
+<h3 id="121-get-the-templates-and-import-them-into-openshift">1.2.1 Get the templates and import them into Openshift</h3>
+
+<p>Download the rhpam-7.4.0-openshift-templates.zip product deliverable file from the <a href="https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&amp;product=rhpam&amp;productChanged=yes">Software Downloads</a> page of the Red Hat Customer Portal.</p>
+
+<ul>
+  <li>
+    <p>Extract the templates from the zip file</p>
+  </li>
+  <li>
+    <p>Investigate the template rhpam74-authoring-ha.yaml and import it into the openshift namespace (if its not there already)</p>
+  </li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ oc get template -n openshift | grep rhpam74-*
+
+If the return is empty (done by cluster-admin):
+$ oc create -f rhpam74-authoring-ha.yaml -n openshift
+</code></pre></div></div>
+
+<h3 id="122-choose-the-required-parameters-for-the-template">1.2.2 Choose the required parameters for the template</h3>
+
+<ul>
+  <li>
+    <p><strong>BUSINESS_CENTRAL_HTTPS_SECRET</strong>: The name of the secret for Business Central - <code class="language-plaintext highlighter-rouge">businesscentral-app-secret</code></p>
+  </li>
+  <li>
+    <p><strong>KIE_SERVER_HTTPS_SECRET</strong>: The name of the secret for Process Server - <code class="language-plaintext highlighter-rouge">kieserver-app-secret</code></p>
+  </li>
+  <li>
+    <p><strong>BUSINESS_CENTRAL_HTTPS_NAME</strong>: The name of the certificate in the keystore - <code class="language-plaintext highlighter-rouge">jboss</code></p>
+  </li>
+  <li>
+    <p><strong>BUSINESS_CENTRAL_HTTPS_PASSWORD</strong>: The password for the keystore - <code class="language-plaintext highlighter-rouge">mykeystorepass</code></p>
+  </li>
+  <li>
+    <p><strong>KIE_SERVER_HTTPS_NAME</strong>: The name of the certificate in the keystore - <code class="language-plaintext highlighter-rouge">jboss</code></p>
+  </li>
+  <li>
+    <p><strong>KIE_SERVER_HTTPS_PASSWORD</strong>: The password for the keystore - <code class="language-plaintext highlighter-rouge">mykeystorepass</code></p>
+  </li>
+  <li>
+    <p><strong>APPLICATION_NAME</strong>: The name of the OpenShift application. OpenShift uses the application name to create a separate set of deployment configurations, services, routes, labels, and artifacts - <code class="language-plaintext highlighter-rouge">rhpam</code></p>
+  </li>
+  <li>
+    <p><strong>IMAGE_STREAM_NAMESPACE</strong>: The namespace where the image streams are available. If the image streams were already available in your OpenShift environment (see Section 2.1, “Ensuring the availability of image streams and the image registry”), the namespace is openshift - <code class="language-plaintext highlighter-rouge">openshift</code></p>
+  </li>
+  <li>
+    <p><strong>KIE_ADMIN_USER</strong> and <strong>KIE_ADMIN_PWD</strong>: The user name and password for the administrative user. If you want to use the Business Central to control or monitor any Process Servers other than the Process Server deployed by the same template , you must set and record the user name and password. - <code class="language-plaintext highlighter-rouge">admin/r3dh4t1!</code></p>
+  </li>
+  <li>
+    <p><strong>KIE_SERVER_USER</strong> and <strong>KIE_SERVER_PWD</strong>: The user name and password that a client application can use to connect to any of the Process Servers. - <code class="language-plaintext highlighter-rouge">client-user/r3dh4t1!</code></p>
+  </li>
+</ul>
+
+<h3 id="123-choose-the-optional-parameters-for-the-template">1.2.3 Choose the optional parameters for the template</h3>
+
+<h3 id="1231-setting-an-optional-maven-repository">1.2.3.1 Setting an optional Maven repository</h3>
+
+<p>When configuring the template to deploy an authoring environment, if you want to place the built KJAR files into an external Maven repository, you must set parameters to access the repository.</p>
+
+<ul>
+  <li>
+<strong>MAVEN_REPO_URL</strong>: The URL for the Maven repository - <code class="language-plaintext highlighter-rouge">http://nexus-nexus.apps.8aa4.example.opentlc.com/repository/maven-releases/</code>
+</li>
+  <li>
+<strong>MAVEN_REPO_ID</strong>: An identifier for the Maven repository. The default value is repo-custom - <code class="language-plaintext highlighter-rouge">nexus-maven-releases</code>
+</li>
+  <li>
+<strong>MAVEN_REPO_USERNAME</strong>: The username for the Maven repository - <code class="language-plaintext highlighter-rouge">admin</code>
+</li>
+  <li>
+<strong>MAVEN_REPO_PASSWORD</strong>: The password for the Maven repository - <code class="language-plaintext highlighter-rouge">admin123</code>
+</li>
+</ul>
+
+<blockquote>
+  <p>IMPORTANT
+To export or push Business Central projects as KJAR artifacts to the external Maven repository, you must also add the repository information in the &gt; pom.xml file for every project. For information about exporting Business Central projects to an external repository, see <a href="https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.4/html-single/packaging_and_deploying_a_red_hat_process_automation_manager_project#maven-external-export-proc_packaging-deploying">Packaging and deploying a Red Hat Process Automation Manager project</a></p>
+</blockquote>
+
+<h3 id="1232-specifying-credentials-to-access-the-built-in-maven-repository-for-an-authoring-environment">1.2.3.2 Specifying credentials to access the built-in Maven repository for an authoring environment</h3>
+
+<p>When configuring the template to deploy an authoring environment, if you want to use the Maven repository that is built into Business Central and to connect additional Process Servers to the Business Central, you must configure credentials for accessing this Maven repository. You can then use these credentials to configure the Process Servers.</p>
+
+<p>Also, if you are configuring RH-SSO or LDAP authentication, you must set the credentials for the built-in Maven repository to a username and password configured in RH-SSO or LDAP. This setting is required so that the Process Server can access the Maven repository.</p>
+
+<ul>
+  <li>
+<strong>BUSINESS_CENTRAL_MAVEN_USERNAME</strong>: The user name for the built-in Maven repository in Business Central. - <code class="language-plaintext highlighter-rouge">mavenUser</code>
+</li>
+  <li>
+<strong>BUSINESS_CENTRAL_MAVEN_PASSWORD</strong>: The password for the built-in Maven repository in Business Central. - <code class="language-plaintext highlighter-rouge">r3dh4t1!</code>
+</li>
+</ul>
+
+<h3 id="1233-configuring-access-to-a-maven-mirror-in-an-environment-without-a-connection-to-the-public-internet-for-an-authoring-environment">1.2.3.3 Configuring access to a Maven mirror in an environment without a connection to the public Internet for an authoring environment</h3>
+
+<p>When configuring the template to deploy an authoring environment, if your OpenShift environment does not have a connection to the public Internet, you must configure access to a Maven mirror that you set up according to <a href="https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.4/html/deploying_a_red_hat_process_automation_manager_authoring_environment_on_red_hat_openshift_container_platform/dm-openshift-prepare-con#offline-repo-proc">Section 2.6, “Preparing a Maven mirror repository for offline use”.</a></p>
+
+<ul>
+  <li>
+<strong>MAVEN_MIRROR_URL</strong>: The URL for the Maven mirror repository. This URL must be accessible from a pod in your OpenShift environment. - <code class="language-plaintext highlighter-rouge">http://nexus-nexus.apps.8aa4.example.opentlc.com/repository/maven-public/</code>
+</li>
+  <li>
+<strong>MAVEN_MIRROR_OF</strong>: The value that determines which artifacts are to be retrieved from the mirror. For instructions about setting the mirrorOf value, see <a href="https://maven.apache.org/guides/mini/guide-mirror-settings.html">Mirror Settings</a> in the Apache Maven documentation. The default value is external:<em>,!repo-rhpamcentr; with this value, Maven retrieves artifacts from the built-in Maven repository of Business Central directly and retrieves any other required artifacts from the mirror. If you configure an external Maven repository (MAVEN_REPO_URL), change MAVEN_MIRROR_OF to exclude the artifacts in this repository, for example, external:</em>,!repo-custom. Replace repo-custom with the ID that you configured in MAVEN_REPO_ID.</li>
+</ul>
+
+<h3 id="1234-specifying-the-git-hooks-directory-for-an-authoring-environment">1.2.3.4 Specifying the Git hooks directory for an authoring environment</h3>
+
+<p>You can use Git hooks to facilitate interaction between the internal Git repository of Business Central and an external Git repository</p>
+
+<ul>
+  <li>
+<strong>GIT_HOOKS_DIR</strong>: The fully qualified path to a Git hooks directory, for example, /opt/kie/data/git/hooks. You must provide the content of this directory and mount it at the specified path. For instructions about providing and mounting the Git hooks directory using a configuration map or a persistent volume, see Section 3.3, <a href="https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.4/html/deploying_a_red_hat_process_automation_manager_authoring_environment_on_red_hat_openshift_container_platform/environment-authoring-con#githooks-proc">“(Optional) Providing the Git hooks directory”.</a>
+</li>
+</ul>
+
+<h3 id="1235-setting-parameters-for-rh-sso-authentication-for-an-authoring-environment">1.2.3.5 Setting parameters for RH-SSO authentication for an authoring environment</h3>
+
+<p>If you want to use RH-SSO authentication, complete the following additional configuration when configuring the template to deploy an authoring environment.</p>
+
+<ul>
+  <li>
+<strong>Prerequisites</strong>
+    <ul>
+      <li>
+        <p>A realm for Red Hat Process Automation Manager is created in the RH-SSO authentication system.</p>
+
+        <figure class="figure w-100">
+<img src="/assets/images/pam_sso/realm.png" class="figure-img img-fluid rounded" alt="Create Realm for PAM"><figcaption class="figure-caption text-center">Create Realm for PAM</figcaption></figure>
+      </li>
+      <li>
+        <p>User names and passwords for Red Hat Process Automation Manager are created in the RH-SSO authentication system. For a list of the available roles, see <a href="https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager/7.4/html/deploying_a_red_hat_process_automation_manager_authoring_environment_on_red_hat_openshift_container_platform/roles-users-con">Chapter 4, Red Hat Process Automation Manager roles and users</a>. The following users are required in order to set the parameters for the environment:</p>
+
+        <ul>
+          <li>An administrative user with the <strong>kie-server</strong>,<strong>rest-all</strong>,<strong>admin</strong> roles. This user can administer and use the environment. Process Servers use this user to authenticate with Business Central. —- for Business Central</li>
+          <li>A server user with the <strong>kie-server</strong>,<strong>rest-all</strong>,<strong>user</strong> roles. This user can make REST API calls to the Process Server. Business Central uses this user to authenticate with Process Servers. — for Process Server</li>
+        </ul>
+      </li>
+      <li>
+        <p>Clients are created in the RH-SSO authentication system for all components of the Red Hat Process Automation Manager environment that you are deploying. The client setup contains the URLs for the components. You can review and edit the URLs after deploying the environment. Alternatively, the Red Hat Process Automation Manager deployment can create the clients. However, this option provides less detailed control over the environment.</p>
+
+        <p>Create the clients for Business Central and Process Server - after deploying PAM we will come back and add the urls of the routes</p>
+
+        <div class="language-plaintext highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code>Client Protocol: openid-connect
+Access Type: confidential
+Valid Redirect URIs: http://dummypam.org (to change)
+Base URL: http://dummypam.org (to change)
+</code></pre></div>        </div>
+
+        <figure class="figure w-100">
+<img src="/assets/images/pam_sso/clients.png" class="figure-img img-fluid rounded" alt="Clients for Business Central and Process Server"><figcaption class="figure-caption text-center">Clients for Business Central and Process Server</figcaption></figure>
+
+        <p>Lets create the necessary client-roles for both clients</p>
+
+        <figure class="figure w-100">
+<img src="/assets/images/pam_sso/client_roles.png" class="figure-img img-fluid rounded" alt="Create Client Roles for PAM"><figcaption class="figure-caption text-center">Create Client Roles for PAM</figcaption></figure>
+
+        <p>Create admin and client-user users and give them passwords (r3dh4t1!)</p>
+
+        <figure class="figure w-100">
+<img src="/assets/images/pam_sso/roles.png" class="figure-img img-fluid rounded" alt="Create Users for PAM"><figcaption class="figure-caption text-center">Create Users for PAM</figcaption></figure>
+
+        <p>Associate the client-roles to the created users. Associate both the business-central and the process-server client roles</p>
+
+        <figure class="figure w-100">
+<img src="/assets/images/pam_sso/admin_client_roles.png" class="figure-img img-fluid rounded" alt="Associate business-central client roles to admin"><figcaption class="figure-caption text-center">Associate business-central client roles to admin</figcaption></figure>
+
+        <figure class="figure w-100">
+<img src="/assets/images/pam_sso/admin_client_roles1.png" class="figure-img img-fluid rounded" alt="Associate process-server client roles to admin"><figcaption class="figure-caption text-center">Associate process-server client roles to admin</figcaption></figure>
+
+        <p>Since we are already on SSO lets also retrive the Business Central and Process Server Client Names and Client Secrets</p>
+
+        <figure class="figure w-100">
+<img src="/assets/images/pam_sso/client_details.png" class="figure-img img-fluid rounded" alt="Associate process-server client roles to admin"><figcaption class="figure-caption text-center">Associate process-server client roles to admin</figcaption></figure>
+
+        <div class="language-plaintext highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code>Business Central
+client name: business-central
+client secret: 49dfc82f-301a-4f42-96bc-1da278474302
+
+Process Server
+client name: process-server
+client secret: 8d33123a-a54c-4adf-b64f-d2b055974c11
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Parameters</strong></p>
+
+    <ul>
+      <li>
+        <p><strong>KIE_ADMIN_USER</strong> and <strong>KIE_ADMIN_PASSWORD</strong> parameters of the template to the user name and password of the administrative user that you created in the RH-SSO - <code class="language-plaintext highlighter-rouge">admin/r3dh4t1!</code></p>
+      </li>
+      <li>
+        <p><strong>KIE_SERVER_USER</strong> and <strong>KIE_SERVER_PASSWORD</strong> parameters of the template to the user name and password of the server user that you created in the RH-SSO - <code class="language-plaintext highlighter-rouge">client-user/r3dh4t1!</code></p>
+      </li>
+      <li>
+        <p><strong>SSO_URL</strong>: The URL for RH-SSO - <code class="language-plaintext highlighter-rouge">https://sso-sso-73.apps.8aa4.example.opentlc.com/auth</code></p>
+      </li>
+      <li>
+        <p><strong>SSO_REALM</strong>: The RH-SSO realm for Red Hat Process Automation Manager. - <code class="language-plaintext highlighter-rouge">PAM</code></p>
+      </li>
+      <li>
+        <p><strong>SSO_DISABLE_SSL_CERTIFICATE_VALIDATION</strong>: Set to true if your RH-SSO installation does not use a valid HTTPS certificate. - <code class="language-plaintext highlighter-rouge">true</code></p>
+      </li>
+      <li>
+        <p><strong>BUSINESS_CENTRAL_SSO_CLIENT</strong>: The RH-SSO client name for Business Central - <code class="language-plaintext highlighter-rouge">business-central</code></p>
+      </li>
+      <li>
+        <p><strong>BUSINESS_CENTRAL_SSO_SECRET</strong>: The secret string that is set in RH-SSO for the client for Business Central. - <code class="language-plaintext highlighter-rouge">49dfc82f-301a-4f42-96bc-1da278474302</code></p>
+      </li>
+      <li>
+        <p><strong>KIE_SERVER_SSO_CLIENT</strong>: The RH-SSO client name for Process Server. - <code class="language-plaintext highlighter-rouge">process-server</code></p>
+      </li>
+      <li>
+        <p><strong>KIE_SERVER_SSO_SECRET</strong>: The secret string that is set in RH-SSO for the client for Process Server. - <code class="language-plaintext highlighter-rouge">8d33123a-a54c-4adf-b64f-d2b055974c11</code></p>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="1236-enabling-prometheus-metric-collection-for-an-authoring-environment">1.2.3.6 Enabling Prometheus metric collection for an authoring environment</h3>
+
+<p>If you want to configure your Process Server deployment to use Prometheus to collect and store metrics, enable support for this feature in Process Server at deployment time.</p>
+
+<ul>
+  <li>
+<strong>PROMETHEUS_SERVER_EXT_DISABLED</strong> parameter to <code class="language-plaintext highlighter-rouge">false</code>
+</li>
+</ul>
+
+<h3 id="124-completing-deployment-of-the-template-for-an-authoring-environment">1.2.4 Completing deployment of the template for an authoring environment</h3>
+
+<ul>
+  <li>
+    <p>Using the Openshift Console, go to the rhpam-authoring Project and click <code class="language-plaintext highlighter-rouge">Browse Catalog</code>, select the <code class="language-plaintext highlighter-rouge">Red Hat Process Automation Manager 7.4 authoring environment (HA, persistent, with https)</code></p>
+  </li>
+  <li>
+    <p>Fill the parameters defined in the previous sections and create!!</p>
+  </li>
+</ul>
+
+<p>Wait for all pods to start…</p>
+
+<ul>
+  <li>Go back to SSO and reconfigure the urls in the clients</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Example:
+Root URL: https://rhpam-rhpamcentr-rhpam-authoring.apps.8aa4.example.opentlc.com
+Valid Redirect URIs: https://rhpam-rhpamcentr-rhpam-authoring.apps.8aa4.example.opentlc.com/*
+</code></pre></div></div>
+
+<figure class="figure w-100">
+  <img src="/assets/images/pam_sso/client_reconfigure.png" class="figure-img img-fluid rounded" alt="Reconfigure the business-central and process-server clients"><figcaption class="figure-caption text-center">Reconfigure the business-central and process-server clients</figcaption></figure>
+
+<h1 id="references">REFERENCES</h1>
+
+<div class="list-group my-3">
+<a class="list-group-item list-group-item-action active disabled text-white">Websites</a><a class="list-group-item list-group-item-action" href="https://www.google.com">Google</a><a class="list-group-item list-group-item-action" href="https://www.github.com">
+GitHub</a>
+
+</div>
+
+
+
+</div>
+  </main>
+
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    by <strong>Joao Tavares</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center">
+<a class="social mx-1" href="https://www.behance.net/seravat" style="color: #6c757d" onmouseover="this.style.color='#1769ff'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-behance fa-1x"></i>
+    </a><a class="social mx-1" href="mailto:tavares.joaomc@gmail.com" style="color: #6c757d" onmouseover="this.style.color='#db4437'" onmouseout="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.facebook.com/your_username" style="color: #6c757d" onmouseover="this.style.color='#3b5998'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-facebook fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.github.com/seravat" style="color: #6c757d" onmouseover="this.style.color='#333333'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.linkedin.com/in/joao-tavares-0542084a" style="color: #6c757d" onmouseover="this.style.color='#007bb5'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a><a class="social mx-1" href="https://medium.com/@your_username" style="color: #6c757d" onmouseover="this.style.color='#00ab6c'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-medium fa-1x"></i>
+    </a><a class="social mx-1" href="https://www.twitter.com/your_username" style="color: #6c757d" onmouseover="this.style.color='#1da1f2'" onmouseout="this.style.color='#6c757d'">
+      <i class="fab fa-twitter fa-1x"></i>
+    </a>
+
+</div>
+<small id="attribution">
+    theme <a href="https://github.com/seravat/portfolYOU">portfolYOU</a>
+  </small>
+  
+</footer>
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+</body>
+
+</html>
