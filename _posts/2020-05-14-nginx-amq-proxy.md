@@ -42,7 +42,67 @@ NOTE: This is an insecure connection, for more information on securing the TCP T
 https://docs.nginx.com/nginx/admin-guide/security-controls/securing-tcp-traffic-upstream/
 ```
 
-## 1. Deploy NGINX on Openshift
+## 2. Deploy NGINX on Openshift
 
+This container uses the official NGINX image from DockerHub an unfortunately it needs to be run as `root`
+
+- Create a ServiceAccount
+
+```
+oc create serviceaccount useroot
+```
+
+- Add permission to use any user id
+
+```
+oc adm policy add-scc-to-user anyuid -z useroot --as system:admin
+```
+
+- Create the ConfigMap with nginx configuration
+
+```
+oc create configmap --from-file=nginx.conf
+```
+
+- Create a yaml with the Deployment
+
+```
+curl https://raw.githubusercontent.com/seravat/nginx-openshift/master/deployment.yaml > deployment.yaml
+```
+
+- Apply the deployment
+
+```
+oc create -f deployment.yaml
+```
+
+[Project GitHub](https://github.com/seravat/nginx-openshift)
+
+## 3. camel-amqp configuration
+
+To configure the amqp component, simply create a Bean:
+
+```java
+	@Bean
+	public AMQPComponent amqp() {
+		JmsConnectionFactory jmsConnectionFactory = new JmsConnectionFactory();
+		jmsConnectionFactory.setRemoteURI("amqp://"+ amqURI);
+		jmsConnectionFactory.setUsername(amqURI);
+		jmsConnectionFactory.setPassword(amqURI);
+		
+		CachingConnectionFactory cachingFactory = new CachingConnectionFactory();
+		cachingFactory.setTargetConnectionFactory(jmsConnectionFactory);
+		
+		JmsConfiguration jmsConfig = new JmsConfiguration();
+		jmsConfig.setConnectionFactory(cachingFactory);
+		jmsConfig.setCacheLevelName(cacheLevel);
+		
+		AMQPComponent amqpComponent = new AMQPComponent();
+		amqpComponent.setConfiguration(jmsConfig);
+		
+		return amqpComponent;
+		
+	}
+```
 
 
