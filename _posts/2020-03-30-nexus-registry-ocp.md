@@ -3,6 +3,7 @@ title: Deploy and Configure Nexus as registry proxy on Openshift 3.11
 tags: [Red Hat, Openshift, Nexus]
 style: 
 color: 
+description: Nexus on Openshift to serve as a Docker Registry Proxy
 ---
 
 In this example we deploy a Nexus 3.x instance to Openshift 3.11 with persistence to serve as a registry proxy to the official [Red Hat Registry](registry.redhat.io)

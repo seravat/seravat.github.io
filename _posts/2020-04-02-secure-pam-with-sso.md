@@ -3,6 +3,7 @@ title: Deploy RHPAM on Openshift 3.11 with SSO as auth provider
 tags: [Red Hat, Openshift, PAM, Process Automation Manager]
 style: 
 color: 
+description: SSO can be a very useful security central point for microservices architectures
 ---
 
 In this example we deploy a RHPAM 7.4 authoring environment to Openshift 3.11 with authentication handled by RHSSO
