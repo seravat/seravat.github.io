@@ -458,25 +458,20 @@ __DONE!__
 
 Feel free to look at the microservice [repo](https://github.com/seravat/sso-fuse-springboot-rest)
 
-## References
 
-[Quickstart Project](https://github.com/aelkz/ocp-sso/blob/master/README.pt-br.md)
-
-[Red Hat SSO Quickstarts](https://github.com/redhat-developer/redhat-sso-quickstarts#keycloak)
-
-[SSO Installation Guide](https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/html/getting_started_guide/install-boot)
-
-[SSO Configuration](https://medium.com/@bcarunmail/securing-rest-api-using-keycloak-and-spring-oauth2-6ddf3a1efcc2)
-
-[Tom Donohue's Blog](https://tomd.xyz/camel-rest/)
-
-[Red Hat Documentation](https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.2/html-single/securing_applications_and_services_guide/index#spring_boot_adapter)
-
-[Baeldung](https://www.baeldung.com/spring-boot-keycloak)
-
-[Secure your Spring Boot Application](https://www.keycloak.org/2017/05/easily-secure-your-spring-boot.html)
-
-[Secure Spring Boot with Keycloak](https://medium.com/keycloak/secure-spring-boot-2-using-keycloak-f755bc255b68)
+# REFERENCES
+{% capture list_items %}
+Quickstart Project, https://github.com/aelkz/ocp-sso/blob/master/README.pt-br.md
+Red Hat SSO Quickstarts, https://github.com/redhat-developer/redhat-sso-quickstarts#keycloak
+SSO Installation Guide, https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/html/getting_started_guide/install-boot
+SSO Configuration, https://medium.com/@bcarunmail/securing-rest-api-using-keycloak-and-spring-oauth2-6ddf3a1efcc2
+Tom Donohue's Blog, https://tomd.xyz/camel-rest/
+Red Hat Documentation, https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.2/html-single/securing_applications_and_services_guide/index#spring_boot_adapter
+Baeldung, https://www.baeldung.com/spring-boot-keycloak
+Secure your Spring Boot Application, https://www.keycloak.org/2017/05/easily-secure-your-spring-boot.html
+Secure Spring Boot with Keycloak, https://medium.com/keycloak/secure-spring-boot-2-using-keycloak-f755bc255b68
+{% endcapture %}
+{% include elements/list.html title="Websites" %}
 
 
 
