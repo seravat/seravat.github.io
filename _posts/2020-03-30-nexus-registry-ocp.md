@@ -266,42 +266,27 @@ oc expose dc nexus --name=nexus-registry-ssl --port=443
 We were unable to use this to pull to Openshift - adding also the domain to the master-config.yaml
 
 
-## 3. References
-
+# REFERENCES
+{% capture list_items %}
 https://help.sonatype.com/repomanager3/security/realms
-
 https://medium.com/flowfactor/creating-a-private-external-image-registry-for-openshift-4-3-a67fc27cd5a4
-
-
 https://tomd.xyz/openshift-nexus-docker-registry/
-
 https://community.sonatype.com/t/to-proxy-openshift-registry-with-nexus-oss-registry-proxy/3021
-
 https://help.sonatype.com/repomanager3/formats/docker-registry/proxy-repository-for-docker
-
 https://blog.sonatype.com/using-nexus-3-as-your-repository-part-3-docker-images
-
 https://community.sonatype.com/t/registry-connect-redhat-com-registries-proxy-in-nexus/3718
-
 https://issues.sonatype.org/browse/NEXUS-16718
-
 https://access.redhat.com/solutions/4616891
-
 https://qiita.com/leechungkyu/items/86cad0396cf95b3b6973
-
 https://www.ivankrizsan.se/2016/06/09/create-a-private-docker-registry/
-
 https://blog.sonatype.com/using-nexus-3-as-your-repository-part-3-docker-images
-
 https://mtijhof.wordpress.com/2018/07/23/using-nexus-oss-as-a-proxy-cache-for-docker-images/
-
 https://access.redhat.com/solutions/3654811
-
 https://blog.sonatype.com/using-nexus-3-as-your-repository-part-3-docker-images
-
-
-
 https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html/developer_guide/tutorials#nexus-maven-tutorial
-
 https://github.com/seravat/openshift-nexus
+{% endcapture %}
+{% include elements/list.html title="Websites" %}
+
+
 

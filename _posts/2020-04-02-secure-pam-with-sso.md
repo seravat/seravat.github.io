@@ -314,16 +314,6 @@ Valid Redirect URIs: https://rhpam-rhpamcentr-rhpam-authoring.apps.8aa4.example.
 {% include elements/figure.html image="/assets/images/pam_sso/client_reconfigure.png" caption="Reconfigure the business-central and process-server clients" %}
 
 
-
-
-
-    
-
-
-
-
-
-
 # REFERENCES
 {% capture list_items %}
 Google,https://www.google.com
