@@ -1,8 +1,8 @@
 ---
 title: Deploy and Configure Nexus as registry proxy on Openshift 3.11
 tags: [Red Hat, Openshift, Nexus]
-style: 
-color: 
+style:
+color:
 description: Nexus on Openshift to serve as a Docker Registry Proxy
 ---
 
@@ -90,7 +90,7 @@ oc expose dc nexus --name=nexus-registry --port=5000
 
 ### 2.4 Create a secure Route to the Registry (TLS)
 
-We can expose an insecure route and add that exception to the configuration of our local docker daemon, however it is not the best way to go about it. We are going to expose a secure Route 
+We can expose an insecure route and add that exception to the configuration of our local docker daemon, however it is not the best way to go about it. We are going to expose a secure Route
 
 We’ll encrypt traffic using OpenShift’s edge SSL termination. When this option is chosen, the service will be exposed externally on port 443. A very basic way of doing this is using:
 
@@ -140,7 +140,7 @@ openssl x509 -req -in ${NEXUS_HOSTNAME}.csr \
 #### 2.4.3 Create the Route, using the certificate, key and CA certificate
 
 ```
-oc create route edge nexus-registry --service=nexus-registry \
+oc create route edge nexus-registry --service=nexus \
 --hostname=${NEXUS_HOSTNAME} \
 --key=${NEXUS_HOSTNAME}.key \
 --cert=${NEXUS_HOSTNAME}.crt \
@@ -246,7 +246,7 @@ Activate the Docker Bearer Token realm in Nexus security tab
 {% include elements/figure.html image="/assets/images/nexus/anonymous_pull1.png" caption="Docker Bearer Token realm" %}
 
 
-> `NOTE 1:` 
+> `NOTE 1:`
 
 If we wanted to use the secure route to our repo, we would need to [add the route certificates to the Openshift chain](https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html)
 
@@ -287,6 +287,3 @@ https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/
 https://github.com/seravat/openshift-nexus
 {% endcapture %}
 {% include elements/list.html title="Websites" %}
-
-
-

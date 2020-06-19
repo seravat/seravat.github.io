@@ -1,8 +1,8 @@
 ---
 title: Deploy RHPAM on Openshift 3.11 with SSO as auth provider
 tags: [Red Hat, Openshift, PAM, Process Automation Manager]
-style: 
-color: 
+style:
+color:
 description: SSO can be a very useful security central point for microservices architectures
 ---
 
@@ -16,7 +16,7 @@ https://access.redhat.com/documentation/en-us/red_hat_process_automation_manager
 
 ## 1.1 Pre-requisites
 
-### 1.1.1 Verify that Openshift has the required image streams. 
+### 1.1.1 Verify that Openshift has the required image streams.
 
 ```
 $ oc get imagestreamtag -n openshift | grep rhpam74-businesscentral
@@ -238,24 +238,22 @@ If you want to use RH-SSO authentication, complete the following additional conf
     ```
 
     {% include elements/figure.html image="/assets/images/pam_sso/clients.png" caption="Clients for Business Central and Process Server" %}
-    
-    Lets create the necessary client-roles for both clients
 
-    {% include elements/figure.html image="/assets/images/pam_sso/client_roles.png" caption="Create Client Roles for PAM" %}
+    Lets create the necessary realm roles for both clients. These roles directly map to the PAM authorization roles.
+
+    {% include elements/figure.html image="/assets/images/pam_sso/roles.png" caption="Create Realm Roles for PAM" %}
 
     Create admin and client-user users and give them passwords (r3dh4t1!)
 
-    {% include elements/figure.html image="/assets/images/pam_sso/roles.png" caption="Create Users for PAM" %}
+    {% include elements/figure.html image="/assets/images/pam_sso/users.png" caption="Create Users for PAM" %}
 
-    Associate the client-roles to the created users. Associate both the business-central and the process-server client roles
+    Associate the SSO realm roles to the created users
 
-    {% include elements/figure.html image="/assets/images/pam_sso/admin_client_roles.png" caption="Associate business-central client roles to admin" %}
-
-    {% include elements/figure.html image="/assets/images/pam_sso/admin_client_roles1.png" caption="Associate process-server client roles to admin" %}
+    {% include elements/figure.html image="/assets/images/pam_sso/user_roles.png" caption="Associate realm roles to admin user" %}
 
     Since we are already on SSO lets also retrive the Business Central and Process Server Client Names and Client Secrets
 
-    {% include elements/figure.html image="/assets/images/pam_sso/client_details.png" caption="Associate process-server client roles to admin" %}
+    {% include elements/figure.html image="/assets/images/pam_sso/client-details.png" caption="Associate process-server client roles to admin" %}
 
     ```
     Business Central
@@ -266,7 +264,7 @@ If you want to use RH-SSO authentication, complete the following additional conf
     client name: process-server
     client secret: 8d33123a-a54c-4adf-b64f-d2b055974c11
     ```
-  
+
 - __Parameters__
 
   * __KIE_ADMIN_USER__ and __KIE_ADMIN_PASSWORD__ parameters of the template to the user name and password of the administrative user that you created in the RH-SSO - `admin/r3dh4t1!`
@@ -277,7 +275,7 @@ If you want to use RH-SSO authentication, complete the following additional conf
 
   * __SSO_REALM__: The RH-SSO realm for Red Hat Process Automation Manager. - `PAM`
 
-  * __SSO_DISABLE_SSL_CERTIFICATE_VALIDATION__: Set to true if your RH-SSO installation does not use a valid HTTPS certificate. - `true` 
+  * __SSO_DISABLE_SSL_CERTIFICATE_VALIDATION__: Set to true if your RH-SSO installation does not use a valid HTTPS certificate. - `true`
 
   * __BUSINESS_CENTRAL_SSO_CLIENT__: The RH-SSO client name for Business Central - `business-central`
 
@@ -320,4 +318,3 @@ Google,https://www.google.com
 GitHub,https://www.github.com
 {% endcapture %}
 {% include elements/list.html title="Websites" %}
-
